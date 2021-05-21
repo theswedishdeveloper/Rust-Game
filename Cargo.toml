@@ -13,3 +13,4 @@ rocket = "0.4.9"
 ggez = "0.6.0-rc1"
 rand = "0.8.3"
 cgmath = { version = "0.17", features = ["mint"] }
+nalgebra = "0.26.2"
