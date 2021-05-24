@@ -14,8 +14,11 @@ use ggez::graphics::{Color, draw, Drawable, DrawParam, Image, mint, Rect};
 use ggez::graphics::spritebatch::{SpriteBatch, SpriteIdx};
 use ggez::input::mouse::MouseButton;
 use rand::Rng;
+use std::alloc::handle_alloc_error;
 
-const AIR_SPEED: f32 = 7.0;
+const AIR_SPEED: f32 = 8.0;
+const ENEMY_MAX_AIR_SPEED: i16 = 20;
+const MAX_ENEMIES: i16 = 5;
 
 static mut RIGHT_KEY_PRESSED: bool = false;
 static mut LEFT_KEY_PRESSED: bool = false;
@@ -35,17 +38,19 @@ const UPDATES_PER_SECOND: f32 = 120.0;
 // And we get the milliseconds of delay that this update rate corresponds to.
 const MILLIS_PER_UPDATE: u64 = (1.0 / UPDATES_PER_SECOND * 1000.0) as u64;
 
+const ENEMIES: Vec<Enemy> = Vec::new();
+
 /* Start Function */
 pub fn start() {
     let (mut ctx, event_loop) = ContextBuilder::new("my_first_game", "Benjamin Ojanne")
         .window_setup(
             ggez::conf::WindowSetup::default()
-                .title("Airplane Game - Version: 1.0.0")
+                .title("AIRPLANE GAME | Version 1.0.0")
                 .icon("/plane.png"),
         )
         .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1))
         .build()
-        .expect("Failed to create ggez context!!");
+        .expect("Failed to create ggez context!!! Try again");
 
     let game_state = MyGameState::new(&mut ctx);
 
@@ -53,14 +58,15 @@ pub fn start() {
     event::run(ctx, event_loop, game_state);
 }
 
-/*fn get_random(max_value: i16) -> i16 {
+fn get_random(min_value: i16, max_value: i16) -> i16 {
     let mut rng = rand::thread_rng();
     rng.gen_range(0..max_value)
-}*/
+}
 
 struct MyGameState {
     plane: Plane,
     background: Background,
+    enemies: Vec<Enemy>,
     bullets: Vec<Bullet>,
     game_over: bool,
     last_update: Instant,
@@ -69,8 +75,6 @@ struct MyGameState {
 impl MyGameState {
     pub fn new(ctx: &mut Context) -> Self {
         // Load / create resources.
-
-        let player_pos = (GRID_SIZE.0 / 2, GRID_SIZE.1 / 2).into();
 
         let mut image = graphics::Image::new(ctx, "/plane.png").unwrap();
         image.set_filter(graphics::FilterMode::Nearest);
@@ -95,13 +99,30 @@ impl MyGameState {
         }
 
         MyGameState {
-            plane: Plane::new(player_pos, image),
+            plane: Plane::new(image),
             background: Background::new(background_img, img_width),
+            enemies: ENEMIES,
             bullets,
             game_over: false,
             last_update: Instant::now(),
         }
     }
+}
+
+pub fn should_spawn_enemy() -> bool {
+    (ENEMIES.len() as i16) < MAX_ENEMIES
+}
+
+pub fn spawn_enemy(ctx: &mut Context) {
+    let mut enemy_img = graphics::Image::new(ctx, "/spacecraft.png").unwrap();
+    enemy_img.set_filter(graphics::FilterMode::Nearest);
+
+    let x: f32 = rand::thread_rng().gen_range((SCREEN_SIZE.0 / 2_f32)..SCREEN_SIZE.0);
+    let y: f32 = rand::thread_rng().gen_range((SCREEN_SIZE.1 / 2_f32)..SCREEN_SIZE.1);
+    let speed: i16 = get_random(2, ENEMY_MAX_AIR_SPEED);
+
+    let enemy: Enemy = Enemy::new(enemy_img, x, y, speed);
+    ENEMIES.push(enemy);
 }
 
 struct Background {
@@ -155,8 +176,29 @@ impl Background {
     }
 }
 
+struct Enemy {
+    image: graphics::Image,
+    x: f32,
+    y: f32,
+    speed: i16,
+}
+
+impl Enemy {
+    pub fn new(image: graphics::Image, spawn_x: f32, spawn_y: f32, speed: i16) -> Self {
+        Enemy {
+            image,
+            x: spawn_x,
+            y: spawn_y,
+            speed,
+        }
+    }
+
+    fn update(&mut self) {}
+
+    fn draw(&mut self, ctx: Context) {}
+}
+
 struct Plane {
-    position: MapPosition,
     image: graphics::Image,
     boost: bool,
     pos: nalgebra::Point2<f32>,
@@ -167,9 +209,8 @@ struct Plane {
 }
 
 impl Plane {
-    pub fn new(position: MapPosition, image: graphics::Image) -> Self {
+    pub fn new(image: graphics::Image) -> Self {
         Plane {
-            position,
             image,
             boost: false,
             pos: nalgebra::Point2::new(0.0, 0.0),
@@ -260,38 +301,6 @@ impl Explosion {
     }
 }
 
-struct MapPosition {
-    x: i16,
-    y: i16,
-}
-
-impl MapPosition {
-    pub fn new(x: i16, y: i16) -> Self {
-        MapPosition { x, y }
-    }
-
-    /*fn get_random_pos() -> Self {
-        (get_random(SCREEN_SIZE.0 as i16), get_random(SCREEN_SIZE.1 as i16)).into()
-    }*/
-}
-
-impl From<(i16, i16)> for MapPosition {
-    fn from(pos: (i16, i16)) -> Self {
-        MapPosition { x: pos.0, y: pos.1 }
-    }
-}
-
-impl From<MapPosition> for graphics::Rect {
-    fn from(pos: MapPosition) -> Self {
-        graphics::Rect::new_i32(
-            pos.x as i32 * GRID_CELL_SIZE.0 as i32,
-            pos.y as i32 * GRID_CELL_SIZE.1 as i32,
-            GRID_CELL_SIZE.0 as i32,
-            GRID_CELL_SIZE.1 as i32,
-        )
-    }
-}
-
 impl EventHandler for MyGameState {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         if !(Instant::now() - self.last_update >= Duration::from_millis(MILLIS_PER_UPDATE)) {
@@ -302,7 +311,10 @@ impl EventHandler for MyGameState {
                 self.plane.update();
             }
             self.background.update();
+
+            //self::handle_enemies(_ctx);
         }
+
         //Set last_update to be now
         self.last_update = Instant::now();
         Ok(())
@@ -407,4 +419,15 @@ impl EventHandler for MyGameState {
             }
         }
     }
+}
+
+//Update enemies
+pub fn handle_enemies(ctx: &mut Context) {
+    let spawn_enemies = should_spawn_enemy();
+
+    if spawn_enemies {
+        spawn_enemy(ctx);
+    }
+
+    for enemy in ENEMIES {}
 }
