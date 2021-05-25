@@ -1,4 +1,5 @@
-# **AIRPLANE GAME**
+# **Air Plane Game**
+
 
 The game is about shooting down spacecrafts flying against you while you are sitting in an airplane.
 
