@@ -3,6 +3,7 @@
  * Copyright 2020 Benjamin Ojanne - All rights reserved
  *
 */
+use std::alloc::handle_alloc_error;
 use std::ptr::null;
 use std::time::{Duration, Instant};
 
@@ -14,7 +15,6 @@ use ggez::graphics::{Color, draw, Drawable, DrawParam, Image, mint, Rect};
 use ggez::graphics::spritebatch::{SpriteBatch, SpriteIdx};
 use ggez::input::mouse::MouseButton;
 use rand::Rng;
-use std::alloc::handle_alloc_error;
 
 const AIR_SPEED: f32 = 8.0;
 const ENEMY_MAX_AIR_SPEED: i16 = 20;
@@ -60,7 +60,7 @@ pub fn start() {
 
 fn get_random(min_value: i16, max_value: i16) -> i16 {
     let mut rng = rand::thread_rng();
-    rng.gen_range(0..max_value)
+    rng.gen_range(min_value..max_value)
 }
 
 struct MyGameState {
@@ -195,7 +195,9 @@ impl Enemy {
 
     fn update(&mut self) {}
 
-    fn draw(&mut self, ctx: Context) {}
+    fn draw(&mut self, ctx: Context) {
+        /*TODO*/
+    }
 }
 
 struct Plane {
@@ -429,5 +431,5 @@ pub fn handle_enemies(ctx: &mut Context) {
         spawn_enemy(ctx);
     }
 
-    for enemy in ENEMIES {}
+    for enemy in ENEMIES { /*TODO*/ }
 }
