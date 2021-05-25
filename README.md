@@ -1,7 +1,7 @@
 # **Air Plane Game**
 
 
-The game is about shooting down spacecrafts flying against you while you are sitting in an airplane.
+The game is about shooting down spacecraft flying against you while you are sitting in an airplane.
 
 ![screenshot](https://user-images.githubusercontent.com/60196628/119525630-f2aec100-bd7e-11eb-984e-e2ed0961348c.png)
 
@@ -12,9 +12,10 @@ Shoot with F and Space
 **How To Install**
 
 1. Download the exe file
-2. Create a new folder and copy the "resources" folder into it and the exe file
-3. Run the exe file, it should then run probebly.
+2. Create a new folder and copy the "resources" folder into it and the "airplane_game.exe" file
+3. Run the "airplane_game.exe" file
 
+Structure:
 
 ![image](https://user-images.githubusercontent.com/60196628/119534023-be3f0300-bd86-11eb-84d1-3064f5ed4b97.png)
 
